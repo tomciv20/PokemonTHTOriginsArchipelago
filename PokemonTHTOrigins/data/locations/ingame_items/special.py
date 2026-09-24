@@ -41,7 +41,7 @@ tm_hm_ncps: dict[str, TMLocationData] = {
     "Castelia City - TM from hiker in building in Castelia Street": TMLocationData(265, always_default, "Castelia City", None, None, None),
     "Castelia City - TM from man in black behind dumpster": TMLocationData(0x197, always_default, "Castelia City", None, None, None),
     "Castelia City - TM from school kid in building in northern street": TMLocationData(270, always_default, "Castelia City", None, None, None),
-    "Castelia City - TM from Mr. Lock in building in northern street": TMLocationData(308, always_default, "Castelia City", None, None, has_lock_capsule),
+    "Castelia City - TM from Mr. Lock in building in northern street": TMLocationData(308, always_default, "Castelia City", None, None, None),
     "Route 4 - TM from worker in northern building": TMLocationData(272, always_default, "Route 4 North", None, None, None),
     "Relic Castle - TM from sage Ryoku": TMLocationData(0x19D, always_default, "Relic Castle Basement", None, None, None),
     "Nimbasa City - TM from ace trainer in western building": TMLocationData(290, always_default, "Nimbasa City", None, None, None),

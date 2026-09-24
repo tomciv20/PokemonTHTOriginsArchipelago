@@ -49,19 +49,9 @@ can_use_surf_or_strength: ExtendedRule = lambda state, world: (
 
 can_fish: ExtendedRule = lambda state, world: state.has("Super Rod", world.player)
 has_rage_candy_bar: ExtendedRule = lambda state, world: state.has("Rage Candy Bar", world.player)
-has_basement_key: ExtendedRule = lambda state, world: state.has("Basement Key", world.player)
-has_parcel: ExtendedRule = lambda state, world: state.has("Parcel", world.player)
-has_loot_sack: ExtendedRule = lambda state, world: state.has("Loot Sack", world.player)
 has_dragon_skull: ExtendedRule = lambda state, world: state.has("Dragon Skull", world.player)
 has_liberty_pass: ExtendedRule = lambda state, world: state.has("Liberty Pass", world.player)
-has_machine_part: ExtendedRule = lambda state, world: state.has("Machine Part", world.player)
-has_explorer_kit: ExtendedRule = lambda state, world: state.has("Explorer Kit", world.player)
-has_tidal_bell: ExtendedRule = lambda state, world: state.has("Tidal Bell", world.player)
-has_oaks_letter: ExtendedRule = lambda state, world: state.has("Oak's Letter", world.player)
-has_blue_card: ExtendedRule = lambda state, world: state.has("Blue Card", world.player)
-has_red_chain: ExtendedRule = lambda state, world: state.has("Red Chain", world.player)
 has_any_legendary_stone: ExtendedRule = lambda state, world: state.has_any(("Light Stone", "Dark Stone"), world.player)
-has_lock_capsule: ExtendedRule = lambda state, world: state.has("Lock Capsule", world.player)
 has_all_grams: ExtendedRule = lambda state, world: state.has_all(("Wingull Gram 1", "Wingull Gram 2", "Wingull Gram 3"), world.player)
 
 has_root_fossil: ExtendedRule = lambda state, world: state.has("Root Fossil", world.player)
@@ -180,7 +170,7 @@ has_any_tm_hm: ExtendedRule = lambda state, world: (
 
 striaton_hidden_item: ExtendedRule = lambda state, world: state.can_reach_region("Route 3", world.player) or can_use_surf(state, world)
 dark_cave: ExtendedRule = lambda state, world: not world.options.modify_logic.is_require_flash or can_use_flash(state, world)
-challengers_cave: ExtendedRule = lambda state, world: has_red_chain(state, world) and dark_cave(state, world)
+challengers_cave: ExtendedRule = lambda state, world: dark_cave(state, world)
 mistralton_cave: ExtendedRule = lambda state, world: can_use_surf(state, world) and dark_cave(state, world)
 trial_chamber: ExtendedRule = lambda state, world: can_encounter_swords_of_justice(state, world) and can_use_strength(state, world)
 moor_of_icirrus: ExtendedRule = lambda state, world: can_use_surf(state, world) or (
@@ -193,9 +183,8 @@ extended_rules_list: tuple = (
     can_use_strength, can_use_surf, can_use_cut, can_use_waterfall, can_use_dive, can_use_flash,
     can_use_surf_or_strength,
 
-    can_fish, has_rage_candy_bar, has_basement_key, has_parcel, has_loot_sack, has_dragon_skull, has_liberty_pass,
-    has_machine_part, has_explorer_kit, has_tidal_bell, has_oaks_letter, has_blue_card, has_red_chain,
-    has_any_legendary_stone, has_lock_capsule, has_all_grams,
+    can_fish, has_rage_candy_bar, has_dragon_skull, has_liberty_pass,
+    has_any_legendary_stone, has_all_grams,
 
     has_root_fossil, has_claw_fossil, has_helix_fossil, has_dome_fossil, has_old_amber,
     has_armor_fossil, has_skull_fossil, has_cover_fossil, has_plume_fossil,

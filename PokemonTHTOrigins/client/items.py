@@ -8,11 +8,12 @@ if TYPE_CHECKING:
     from ..bizhawk_client import PokemonTHTOriginsClient
     from worlds._bizhawk.context import BizHawkClientContext
 
-# Key items that are part of the AP item pool (see items.py:get_main_item_pool) and therefore must
-# not be usable until the player has actually received them from the multiworld. Since THT Origins
-# is unpatched, the vanilla game still hands these out itself at their original story beats, so the
-# client has to strip them back out of the key items bag whenever the game grants one early.
+# Items that are part of the AP item pool (see items.py:get_main_item_pool) and therefore must not
+# be usable until the player has actually received them from the multiworld. Since THT Origins isn't
+# ROM-patched, the vanilla game still hands these out itself at their original story beats, so the
+# client has to strip them back out of the relevant bag whenever the game grants one early.
 _gated_key_item_ids: set[int] | None = None
+_gated_tm_hm_ids: set[int] | None = None
 
 
 def _get_gated_key_item_ids() -> set[int]:
@@ -22,8 +23,30 @@ def _get_gated_key_item_ids() -> set[int]:
         ids |= {data.item_id for data in key_vanilla.values()}
         ids.add(key_special["Light Stone"].item_id)
         ids.add(key_special["Xtransceiver (Blue)"].item_id)
+        # Dragon Skull is a forced vanilla grant-then-steal sequence (Pinwheel Forest: picked up,
+        # then immediately taken by a Team Plasma grunt to open Skyarrow Bridge) - every player
+        # triggers it regardless of AP state. Stripping it mid-sequence could interfere with the
+        # vanilla script's own removal step and soft-lock the player, so it's exempt from gating.
+        ids.discard(key_progression["Dragon Skull"].item_id)
         _gated_key_item_ids = ids
     return _gated_key_item_ids
+
+
+def _get_gated_tm_hm_ids() -> set[int]:
+    global _gated_tm_hm_ids
+    if _gated_tm_hm_ids is None:
+        _gated_tm_hm_ids = {data.item_id for data in all_tm_hm.values()}
+    return _gated_tm_hm_ids
+
+
+def _authorized_ids(ctx: "BizHawkClientContext", gated_ids: set[int]) -> set[int]:
+    authorized: set[int] = set()
+    for network_item in ctx.items_received:
+        name = ctx.item_names.lookup_in_game(network_item.item)
+        data = all_items_dict_view.get(name)
+        if data is not None and data.item_id in gated_ids:
+            authorized.add(data.item_id)
+    return authorized
 
 
 async def receive_items(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext") -> None:
@@ -173,26 +196,20 @@ async def reload_key_items(client: "PokemonTHTOriginsClient", ctx: "BizHawkClien
                 pass
 
 
-async def enforce_key_item_gating(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext") -> None:
-    """Strip any gated key item the vanilla game handed out directly, before AP has actually sent it.
+async def _enforce_bag_gating(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext",
+                              bag_offset: int, bag_size: int, gated_ids: set[int], bag_label: str) -> None:
+    """Strip any gated item the vanilla game handed out directly, before AP has actually sent it.
 
-    THT Origins isn't ROM-patched, so its own scripts still place these items in the key items bag
-    at their original story beats regardless of the multiworld state. This runs every watcher tick
-    and removes any such item that isn't yet in ctx.items_received, so the player can't use it (e.g.
-    to satisfy an in-game "do you have X" check) before AP has actually granted it. Legitimately
+    THT Origins isn't ROM-patched, so its own scripts still place these items in their bag at their
+    original story beats regardless of the multiworld state. This runs every watcher tick and removes
+    any such item that isn't yet in ctx.items_received, so the player can't use it (e.g. to teach an
+    HM, or satisfy an in-game "do you have X" check) before AP has actually granted it. Legitimately
     received copies (written by receive_items/reload_key_items) are left alone.
     """
-    gated_ids = _get_gated_key_item_ids()
+    authorized_ids = _authorized_ids(ctx, gated_ids)
 
-    authorized_ids: set[int] = set()
-    for network_item in ctx.items_received:
-        name = ctx.item_names.lookup_in_game(network_item.item)
-        data = all_items_dict_view.get(name)
-        if data is not None and data.item_id in gated_ids:
-            authorized_ids.add(data.item_id)
-
-    buffer = await read_bag(client, ctx, client.key_items_bag_offset, client.key_items_bag_size)
-    for slot in range(client.key_items_bag_size):
+    buffer = await read_bag(client, ctx, bag_offset, bag_size)
+    for slot in range(bag_size):
         old_slot_bytes = buffer[slot*4:(slot*4)+4]
         id_in_slot = int.from_bytes(old_slot_bytes[:2], "little")
         if id_in_slot == 0 or id_in_slot not in gated_ids or id_in_slot in authorized_ids:
@@ -200,19 +217,29 @@ async def enforce_key_item_gating(client: "PokemonTHTOriginsClient", ctx: "BizHa
 
         if await bizhawk.guarded_write(
             ctx.bizhawk_ctx, ((
-                client.save_data_address + client.key_items_bag_offset + (slot*4),
+                client.save_data_address + bag_offset + (slot*4),
                 bytes(4),
                 client.ram_read_write_domain
             ),), ((
-                client.save_data_address + client.key_items_bag_offset + (slot*4),
+                client.save_data_address + bag_offset + (slot*4),
                 bytes(old_slot_bytes),
                 client.ram_read_write_domain
             ),)
         ):
             buffer[slot*4:(slot*4)+4] = bytes(4)
             client.logger.info(
-                f"Removed key item (id {id_in_slot:#06x}) the game granted before it was received from Archipelago."
+                f"Removed {bag_label} (id {id_in_slot:#06x}) the game granted before it was received from Archipelago."
             )
+
+
+async def enforce_key_item_gating(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext") -> None:
+    await _enforce_bag_gating(client, ctx, client.key_items_bag_offset, client.key_items_bag_size,
+                              _get_gated_key_item_ids(), "key item")
+
+
+async def enforce_tm_hm_gating(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext") -> None:
+    await _enforce_bag_gating(client, ctx, client.tm_hm_bag_offset, client.tm_hm_bag_size,
+                              _get_gated_tm_hm_ids(), "TM/HM")
 
 
 async def read_bag(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext", bag_offset: int, bag_size: int) -> bytearray:

@@ -7,7 +7,7 @@ from NetUtils import ClientStatus
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 from .client.locations import check_flag_locations
-from .client.items import receive_items, enforce_key_item_gating
+from .client.items import receive_items, enforce_key_item_gating, enforce_tm_hm_gating
 from .client.setup import early_setup, late_setup
 
 if TYPE_CHECKING:
@@ -124,6 +124,7 @@ class PokemonTHTOriginsClient(BizHawkClient):
 
             await receive_items(self, ctx)
             await enforce_key_item_gating(self, ctx)
+            await enforce_tm_hm_gating(self, ctx)
 
             if await self.goal_checking_method(self, ctx):
                 await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])

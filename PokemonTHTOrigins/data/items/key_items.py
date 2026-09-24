@@ -10,17 +10,7 @@ special: dict[str, ItemData] = {
 }
 
 progression: dict[str, ItemData] = {
-    "Explorer Kit": ItemData(0x01AC, always_progression),
-    "Loot Sack": ItemData(0x01AD, always_progression),
-    "Red Chain": ItemData(0x01B9, always_progression),
     "Super Rod": ItemData(0x01BF, always_progression),
-    "Oak's Letter": ItemData(0x01C4, always_progression),
-    "Parcel": ItemData(0x01CB, always_progression),
-    "Blue Card": ItemData(0x01D8, always_progression),
-    "Basement Key": ItemData(0x01DC, always_progression),
-    "Machine Part": ItemData(0x01E1, always_progression),
-    "Tidal Bell": ItemData(0x01F7, always_progression),
-    "Lock Capsule": ItemData(0x0215, always_progression),
     "Liberty Pass": ItemData(0x023E, always_progression),
     "Dragon Skull": ItemData(0x0243, always_progression),
     "Wingull Gram 1": ItemData(0x026F, always_progression),
