@@ -1,0 +1,46 @@
+name: Thomas (THTO)
+
+description: Default Pokemon THT Origins Template
+
+game: Pokemon THT Origins
+requires:
+  version: 0.6.0
+
+Pokemon THT Origins:
+  progression_balancing:
+    normal: 50
+
+  accessibility:
+    full: 50
+    minimal: 0
+
+  goal:
+    # ghetsis: Defeat Jonah (Ghetsis) to win.
+    ghetsis: 50
+
+  local_items:
+    []
+
+  non_local_items:
+    []
+
+  start_inventory:
+    {}
+
+  start_inventory_from_pool:
+    {}
+
+  start_hints:
+    []
+
+  start_location_hints:
+    []
+
+  exclude_locations:
+    []
+
+  priority_locations:
+    []
+
+  item_links:
+    []
