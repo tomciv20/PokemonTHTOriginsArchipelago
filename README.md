@@ -42,6 +42,7 @@ Pokemon THT Origins is a Pokemon Black romhack with a new story featuring origin
 - The BizHawk client communicates with the game via memory rather than ROM patching
 - Items are delivered directly to your in-game bag
 - Defeating Jonah (the final boss, renamed from Ghetsis) completes your game
+- Since the ROM isn't patched, the vanilla game still hands you key items and TMs/HMs at their normal story beats. The client detects this and removes them from your bag again until Archipelago has actually sent you that item, so progression stays gated by the multiworld rather than by vanilla pickups
 
 ---
 
@@ -53,16 +54,17 @@ All item pickup locations from Pokemon Black are included:
 - **NPC gifts** — items given by characters in the story
 - **Gym Badges** — all 8 badges from gym leaders
 - **TMs and HMs** — all technical and hidden machines
-- **Key items** — story-critical items (Dragon Skull, Machine Part, etc.)
+- **Key items** — story-critical items (Dragon Skull, Liberty Pass, etc.)
 
-**619 items** shuffled across **633 locations**.
+**609 items** shuffled across **633 locations** (the difference is filled with vanilla-style filler items).
 
 ---
 
 ## Differences from Vanilla Pokemon Black AP
 
 - No ROM patching required — plays on the original `.nds` file
-- No wild Pokemon or trainer randomization
+- No wild Pokemon, starter, or trainer randomization, and none planned — the vanilla world implements these by rewriting ROM data tables at patch time, which isn't possible without introducing real ROM patching here
+- A handful of vanilla BW key items that only functioned as progression gates because of the vanilla world's ROM patch (Explorer Kit, Loot Sack, Red Chain, Oak's Letter, Parcel, Blue Card, Basement Key, Machine Part, Tidal Bell, Lock Capsule) have been removed entirely, since they never gated anything here
 - Only goal: Defeat Jonah (Ghetsis) — no alternate win conditions
 
 ---
