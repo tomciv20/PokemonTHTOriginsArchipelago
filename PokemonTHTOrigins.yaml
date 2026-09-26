@@ -20,6 +20,20 @@ Pokemon THT Origins:
     # ghetsis: Defeat Jonah (Ghetsis) to win.
     ghetsis: 50
 
+  # Which groups of locations are checks. Turn groups off for a shorter game (at least one must stay on).
+  # All on = 511 checks. Items on the ground = 277, hidden items = 131, NPC gifts = 103.
+  include_overworld_items:
+    true: 50
+    false: 0
+
+  include_hidden_items:
+    true: 50
+    false: 0
+
+  include_npc_gifts:
+    true: 50
+    false: 0
+
   local_items:
     []
 

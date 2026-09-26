@@ -77,17 +77,20 @@ def create_and_place_locations(world: "PokemonTHTOriginsWorld") -> None:
     from .data.locations.ingame_items.special import gym_badges, gym_tms, tm_hm_ncps
     from .data.locations import is_checkable_unpatched
 
+    options = world.options
     all_tables = [
-        (table, None),
-        (abyssal_ruins, None),
-        (hidden_table, None),
-        (other_table, None),
-        (gym_badges, None),
-        (gym_tms, None),
-        (tm_hm_ncps, None),
+        (table, options.include_overworld_items),
+        (abyssal_ruins, options.include_overworld_items),
+        (hidden_table, options.include_hidden_items),
+        (other_table, options.include_npc_gifts),
+        (gym_badges, options.include_npc_gifts),
+        (gym_tms, options.include_npc_gifts),
+        (tm_hm_ncps, options.include_npc_gifts),
     ]
 
-    for tab, _ in all_tables:
+    for tab, included in all_tables:
+        if not included:
+            continue
         for name, data in tab.items():
             if data.inclusion_rule is not None and not data.inclusion_rule(world):
                 continue

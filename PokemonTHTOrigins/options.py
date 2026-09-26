@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from dataclasses import dataclass
-from Options import PerGameCommonOptions, Choice
+from Options import PerGameCommonOptions, Choice, DefaultOnToggle
 
 
 class Goal(Choice):
@@ -10,9 +10,27 @@ class Goal(Choice):
     default = 0
 
 
+class IncludeOverworldItems(DefaultOnToggle):
+    """Whether items lying on the ground (277 locations) are checks. Turn off to have far fewer checks."""
+    display_name = "Include Overworld Items"
+
+
+class IncludeHiddenItems(DefaultOnToggle):
+    """Whether items found with the Dowsing Machine (131 locations) are checks. Turn off to have far fewer checks."""
+    display_name = "Include Hidden Items"
+
+
+class IncludeNpcGifts(DefaultOnToggle):
+    """Whether items and TMs/HMs given by NPCs and events (103 locations) are checks."""
+    display_name = "Include NPC Gifts"
+
+
 @dataclass
 class PokemonTHTOriginsOptions(PerGameCommonOptions):
     goal: Goal
+    include_overworld_items: IncludeOverworldItems
+    include_hidden_items: IncludeHiddenItems
+    include_npc_gifts: IncludeNpcGifts
 
 
 # Class-level stubs so vanilla BW rules.py can access these without error

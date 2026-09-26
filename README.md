@@ -8,7 +8,7 @@ An [Archipelago](https://archipelago.gg) multiworld integration for **Pokemon TH
 
 Pokemon THT Origins is a Pokemon Black romhack with a new story featuring original characters. This apworld lets you play it as part of an Archipelago multiworld — items from the game get shuffled across all players' worlds, and you collect items sent to you from other players.
 
-**Win condition:** Defeat Jonah (Ghetsis in vanilla) to complete your game. *(See [Known limitations](#known-limitations) — this needs a small change in the ROM's scripts before it can trigger.)*
+**Win condition:** Defeat Jonah (Ghetsis in vanilla) to complete your game. *(This needs a THT Origins build that sets the goal flag, see [Known limitations](#known-limitations).)*
 
 ---
 
@@ -57,6 +57,8 @@ Pokemon THT Origins is a Pokemon Black romhack with a new story featuring origin
 | NPC gifts and events | 88 |
 | TMs/HMs given by NPCs | 15 |
 
+To get fewer checks, turn location groups off in your yaml with `include_overworld_items`, `include_hidden_items` and `include_npc_gifts` (at least one must stay on). For example, turning off hidden items gives 380 checks, and turning off items on the ground gives 234. Everything the game needs to be beatable stays in the pool whichever you pick.
+
 The item pool is the 8 gym badges, HMs and TMs, evolution stones and other held items, fossils, and the key items **Dragon Skull, Liberty Pass, Super Rod and the three Wingull Grams**, plus the vanilla Bicycle, Pal Pad, Vs. Recorder, Gracidea, Dowsing Machine and Prop Case. The remaining slots are filled with random filler items.
 
 ---
@@ -66,9 +68,9 @@ The item pool is the 8 gym badges, HMs and TMs, evolution stones and other held 
 The official Pokemon Black and White world works by patching the ROM. Among other things, that patch adds its own flags (numbered `0x172`–`0x1DF`) to the game's scripts so the client can tell when certain events happen. **THT Origins is not patched, and its scripts never set those flags** (checked by scanning the ROM's script archive: vanilla Black and THT Origins contain no set-flag command for any of them, the AP-patched ROM contains 67). That has two consequences:
 
 - **94 locations from the official world are not included here** because they can never be checked: all 8 gym badge rewards, the gym TM rewards, most NPC gifts and NPC TMs, and 14 hidden items whose flags come from the patch.
-- **The win condition cannot trigger yet.** The client watches flag `0x1D3` (defeating Ghetsis/Jonah), which the ROM never sets.
+- **The win condition only triggers on a ROM that sets flag `0x1D3`.** The client watches that flag (defeating Ghetsis/Jonah), and neither vanilla Black nor an unmodified THT Origins ever sets it. The change is four bytes, see below.
 
-Both go away if the ROM sets those flags itself, see below.
+Other flags can be added to the ROM the same way to bring more locations back.
 
 Other differences from the official world:
 
@@ -79,7 +81,16 @@ Other differences from the official world:
 
 ### For the ROM's author
 
-To make the win condition work, add a set-flag for `0x1D3` to the script that runs after the final fight against Jonah. To bring other locations back, set their flag in the matching script (badge rewards use `0x172`–`0x179`, in the order Striaton to Opelucid), then add the flag to `HACK_SET_FLAGS` in `PokemonTHTOrigins/data/locations/__init__.py` and rebuild.
+To make the win condition work, the final-fight script must set flag `0x1D3`. In the script archive `a/0/5/7`, subfile `556` (the final fight; byte-identical in vanilla Black and THT Origins) has this sequence, where the two branches after the battle join up:
+
+```
+1e 00 02 00 00 00   8c 00   03 00 1e 00   64 00 01 00 ...
+                            ^ offset 0x1212 inside subfile 556
+```
+
+Replace the 4 bytes at `0x1212` (`ReturnAfterDelay 30`) with `23 00 d3 01` (`SetFlag 0x1D3`). This is the same spot where the official world's patch sets the flag; it drops a half-second wait rather than inserting a command, so no jump offsets need to change. In a script editor, the equivalent is to add `SetFlag 0x1D3` at that join point (before the 30 frame delay). Flag `0x1D3` isn't used by any other script.
+
+To bring other locations back, set their flag in the matching script the same way (badge rewards use `0x172`–`0x179`, in the order Striaton to Opelucid), then add the flag to `HACK_SET_FLAGS` in `PokemonTHTOrigins/data/locations/__init__.py` and rebuild.
 
 ---
 

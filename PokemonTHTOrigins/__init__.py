@@ -1,6 +1,7 @@
 from typing import ClassVar, Mapping, Any
 
-from BaseClasses import MultiWorld, Item, ItemClassification
+from BaseClasses import MultiWorld, Item, ItemClassification, LocationProgressType
+from Options import OptionError
 
 from worlds.AutoWorld import World, WebWorld
 from . import options, locations, items, bizhawk_client as _bizhawk_client
@@ -41,6 +42,10 @@ class PokemonTHTOriginsWorld(World):
         self.fighting_type_species: set = {"Trio Badge"}
 
     def generate_early(self) -> None:
+        if not (self.options.include_overworld_items or self.options.include_hidden_items
+                or self.options.include_npc_gifts):
+            raise OptionError(f"{self.player_name}: at least one of Include Overworld Items, Include Hidden Items "
+                              f"and Include NPC Gifts must be on")
         self.regions = locations.get_regions(self)
         self.rules_dict = locations.create_rule_dict(self)
         locations.connect_regions(self)
@@ -84,7 +89,13 @@ class PokemonTHTOriginsWorld(World):
         item_pool = deduped
 
         if len(item_pool) > self.to_be_filled_locations:
-            item_pool = item_pool[:self.to_be_filled_locations]
+            # Fewer locations than curated items (some location groups turned off): drop the least important
+            # ones first, so everything the logic needs is always kept. Excluded locations can only hold filler,
+            # so leave room for that as well.
+            excluded = sum(1 for location in self.multiworld.get_unfilled_locations(self.player)
+                           if location.progress_type == LocationProgressType.EXCLUDED)
+            item_pool.sort(key=lambda item: 0 if item.advancement else (1 if item.useful else 2))
+            item_pool = item_pool[:max(0, self.to_be_filled_locations - excluded)]
         while len(item_pool) < self.to_be_filled_locations:
             item_pool.append(self.create_item(self.get_filler_item_name()))
 
