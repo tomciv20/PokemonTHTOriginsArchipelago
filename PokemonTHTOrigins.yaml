@@ -1,4 +1,6 @@
-name: Thomas (THTO)
+# Your player/slot name - CHANGE THIS. It must be unique in the multiworld
+# and is what you type into the BizHawk Client when connecting.
+name: YourNameHere
 
 description: Default Pokemon THT Origins Template
 
@@ -25,9 +27,6 @@ Pokemon THT Origins:
     []
 
   start_inventory:
-    {}
-
-  start_inventory_from_pool:
     {}
 
   start_hints:
