@@ -16,6 +16,7 @@ def get_location_lookup_table() -> dict[str, int]:
     from .data.locations.ingame_items.hidden_items import table as hidden_table
     from .data.locations.ingame_items.other import table as other_table
     from .data.locations.ingame_items.special import gym_badges, gym_tms, tm_hm_ncps
+    from .data.locations import is_checkable_unpatched
 
     result: dict[str, int] = {}
 
@@ -36,7 +37,8 @@ def get_location_lookup_table() -> dict[str, int]:
     for name, data in {**gym_tms, **tm_hm_ncps}.items():
         result[name] = data.flag_id + 500000
 
-    return result
+    every = {**table, **abyssal_ruins, **hidden_table, **other_table, **gym_badges, **gym_tms, **tm_hm_ncps}
+    return {name: loc_id for name, loc_id in result.items() if is_checkable_unpatched(every[name])}
 
 
 def get_regions(world: "PokemonTHTOriginsWorld") -> dict[str, Region]:
@@ -73,6 +75,7 @@ def create_and_place_locations(world: "PokemonTHTOriginsWorld") -> None:
     from .data.locations.ingame_items.hidden_items import table as hidden_table
     from .data.locations.ingame_items.other import table as other_table
     from .data.locations.ingame_items.special import gym_badges, gym_tms, tm_hm_ncps
+    from .data.locations import is_checkable_unpatched
 
     all_tables = [
         (table, None),
@@ -87,6 +90,8 @@ def create_and_place_locations(world: "PokemonTHTOriginsWorld") -> None:
     for tab, _ in all_tables:
         for name, data in tab.items():
             if data.inclusion_rule is not None and not data.inclusion_rule(world):
+                continue
+            if not is_checkable_unpatched(data):
                 continue
             if data.region not in world.regions:
                 continue

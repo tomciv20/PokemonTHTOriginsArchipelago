@@ -36,6 +36,8 @@ def get_method(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext") -
 
 
 async def defeat_ghetsis(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext") -> bool:
+    # Flag 0x1D3 is one of the custom flags vanilla BW's ROM patch adds. Neither vanilla Black nor the THT Origins
+    # ROM sets it, so the THT Origins scripts need a set-flag for 0x1D3 after the final fight for this to fire.
     return client.get_flag(0x1D3)
 
 

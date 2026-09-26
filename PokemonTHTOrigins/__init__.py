@@ -3,7 +3,9 @@ from typing import ClassVar, Mapping, Any
 from BaseClasses import MultiWorld, Item, ItemClassification
 
 from worlds.AutoWorld import World, WebWorld
-from . import options, locations, items, bizhawk_client as _bizhawk_client  # registers the client
+from . import options, locations, items, bizhawk_client as _bizhawk_client
+
+_bizhawk_client.register_client()
 
 
 class PokemonTHTOriginsWebWorld(WebWorld):

@@ -23,10 +23,10 @@ def _get_gated_key_item_ids() -> set[int]:
         ids |= {data.item_id for data in key_vanilla.values()}
         ids.add(key_special["Light Stone"].item_id)
         ids.add(key_special["Xtransceiver (Blue)"].item_id)
-        # Dragon Skull is a forced vanilla grant-then-steal sequence (Pinwheel Forest: picked up,
-        # then immediately taken by a Team Plasma grunt to open Skyarrow Bridge) - every player
-        # triggers it regardless of AP state. Stripping it mid-sequence could interfere with the
-        # vanilla script's own removal step and soft-lock the player, so it's exempt from gating.
+        # Dragon Skull is a real story item in vanilla: Team Plasma steals it from the Nacrene museum and the
+        # player retrieves it from a grunt in Pinwheel Forest, then hands it back. Every player triggers that
+        # regardless of AP state, and the later hand-in needs the physical item, so stripping it could block
+        # the story. It's exempt from gating.
         ids.discard(key_progression["Dragon Skull"].item_id)
         _gated_key_item_ids = ids
     return _gated_key_item_ids
@@ -37,6 +37,16 @@ def _get_gated_tm_hm_ids() -> set[int]:
     if _gated_tm_hm_ids is None:
         _gated_tm_hm_ids = {data.item_id for data in all_tm_hm.values()}
     return _gated_tm_hm_ids
+
+
+async def items_synced(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientContext") -> bool:
+    """Whether ctx.items_received already contains every item the save says it was given.
+
+    False while the server's item list is still arriving after connecting (or if the save belongs to a
+    different, longer multiworld). Anything that decides what the player is *allowed* to hold has to wait
+    for this, since an incomplete list would make legitimately received items look unauthorized.
+    """
+    return len(ctx.items_received) >= await client.read_var(ctx, 0x126, 4)
 
 
 def _authorized_ids(ctx: "BizHawkClientContext", gated_ids: set[int]) -> set[int]:
@@ -146,7 +156,7 @@ async def reload_key_items(client: "PokemonTHTOriginsClient", ctx: "BizHawkClien
     medicine_bag_buffer: bytearray | None = None
     tm_hm_bag_buffer: bytearray | None = None
 
-    for index in range(received_items_count):
+    for index in range(min(received_items_count, len(ctx.items_received))):
         network_item = ctx.items_received[index]
         name = ctx.item_names.lookup_in_game(network_item.item)
         internal_id = all_items_dict_view[name].item_id

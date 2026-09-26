@@ -23,6 +23,3 @@ async def late_setup(client: "PokemonTHTOriginsClient", ctx: "BizHawkClientConte
     from .items import reload_key_items
 
     await reload_key_items(client, ctx)
-
-    if not client.get_flag(0x1DE):
-        await client.write_set_flag(ctx, 0x1DE)

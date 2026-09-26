@@ -7,7 +7,7 @@ from NetUtils import ClientStatus
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 from .client.locations import check_flag_locations
-from .client.items import receive_items, enforce_key_item_gating, enforce_tm_hm_gating
+from .client.items import receive_items, enforce_key_item_gating, enforce_tm_hm_gating, items_synced
 from .client.setup import early_setup, late_setup
 
 if TYPE_CHECKING:
@@ -15,7 +15,21 @@ if TYPE_CHECKING:
 
 
 def register_client():
-    pass
+    """Make this client the first one BizHawk tries for NDS ROMs.
+
+    Handlers are tried in registration order, and the official Pokemon Black and White world (if installed)
+    would otherwise claim an unpatched Pokemon Black based ROM before this client gets a look. This client
+    hands patched vanilla BW ROMs back to it (see validate_rom), so both worlds keep working side by side.
+    """
+    from worlds._bizhawk.client import AutoBizHawkClientRegister
+
+    for handlers in AutoBizHawkClientRegister.game_handlers.values():
+        if PokemonTHTOriginsClient.game in handlers:
+            ours = handlers.pop(PokemonTHTOriginsClient.game)
+            others = dict(handlers)
+            handlers.clear()
+            handlers[PokemonTHTOriginsClient.game] = ours
+            handlers.update(others)
 
 
 class PokemonTHTOriginsClient(BizHawkClient):
@@ -52,6 +66,7 @@ class PokemonTHTOriginsClient(BizHawkClient):
         self.player_name: str | None = None
         self.missing_flag_loc_ids: list[list[int]] = [[] for _ in range(self.flags_amount)]
         self.save_data_address = 0
+        self.late_setup_done: bool = False
         self.goal_checking_method: Callable[["PokemonTHTOriginsClient", "BizHawkClientContext"],
                                             Coroutine[Any, Any, bool]] | None = None
         self.logger = logging.getLogger("Client")
@@ -70,12 +85,16 @@ class PokemonTHTOriginsClient(BizHawkClient):
         if not header[0][:18].startswith(b'POKEMON B\0\0\0IRBO01'):
             return False
 
-        # Vanilla BW patched ROMs (.apblack) have a player name (pure ASCII) at offset 0xa0.
-        # THT Origins is unpatched so that area contains binary game data (bytes > 0x7F).
-        # Reject if it looks like a vanilla BW patched ROM.
-        name_area = header[0][0xa0:0xa0 + 8].strip(b'\0')
-        if name_area and name_area.isascii():
-            return False  # This is a patched vanilla BW ROM, not THT Origins
+        # A ROM patched by the official Pokemon Black and White world stores its player name (UTF-8) at
+        # offset 0xa0. THT Origins is unpatched, so that area is empty - leave anything with a name to the
+        # official client.
+        name_area = header[0][0xa0:].strip(b'\0')
+        if name_area:
+            try:
+                name_area.decode()
+                return False
+            except UnicodeDecodeError:
+                pass
 
         ctx.game = self.game
         ctx.items_handling = 0b111
@@ -86,6 +105,8 @@ class PokemonTHTOriginsClient(BizHawkClient):
     def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
         if cmd == "Connected":
             from .data.locations import all_item_locations
+            self.missing_flag_loc_ids = [[] for _ in range(self.flags_amount)]
+            self.late_setup_done = False
             for loc_id in ctx.missing_locations:
                 loc_name = ctx.location_names.lookup_in_game(loc_id)
                 if loc_name in all_item_locations:
@@ -113,24 +134,27 @@ class PokemonTHTOriginsClient(BizHawkClient):
             if read[0][0] == 0:
                 return
 
-            setup_needed = False
             if self.save_data_address == 0:
                 await early_setup(self, ctx)
-                setup_needed = True
 
             locations_to_check = await check_flag_locations(self, ctx)
             if locations_to_check:
                 await ctx.send_msgs([{"cmd": "LocationChecks", "locations": list(locations_to_check)}])
 
             await receive_items(self, ctx)
-            await enforce_key_item_gating(self, ctx)
-            await enforce_tm_hm_gating(self, ctx)
+
+            # Right after connecting, ctx.items_received can still be empty (or partial) while the save already
+            # remembers how many items it was given. Acting on that would treat legitimately received items as
+            # unauthorized, so wait until the server's item list has caught up with the save.
+            if await items_synced(self, ctx):
+                if not self.late_setup_done:
+                    await late_setup(self, ctx)
+                    self.late_setup_done = True
+                await enforce_key_item_gating(self, ctx)
+                await enforce_tm_hm_gating(self, ctx)
 
             if await self.goal_checking_method(self, ctx):
                 await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
-
-            if setup_needed:
-                await late_setup(self, ctx)
 
         except bizhawk.RequestFailedError:
             pass
