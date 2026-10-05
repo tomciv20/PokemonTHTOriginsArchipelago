@@ -34,13 +34,6 @@ Pokemon THT Origins:
     true: 50
     false: 0
 
-  # Postgame areas (Routes 11 to 15, Undella Town, Giant Chasm, Abyssal Ruins, Abundant Shrine, Challenger's Cave,
-  # Battle Company, ...) can't be reached until you have finished the story. Off = those checks are left out.
-  # On = they exist (+142 checks) but only hold filler items.
-  include_postgame_checks:
-    true: 0
-    false: 50
-
   local_items:
     []
 

@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from dataclasses import dataclass
-from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle
+from Options import PerGameCommonOptions, Choice, DefaultOnToggle
 
 
 class Goal(Choice):
@@ -25,22 +25,12 @@ class IncludeNpcGifts(DefaultOnToggle):
     display_name = "Include NPC Gifts"
 
 
-class IncludePostgameChecks(Toggle):
-    """
-    Whether locations that are only reachable after finishing the story (Routes 11 to 15, Undella Town, Giant Chasm,
-    the Abyssal Ruins, Abundant Shrine, Challenger's Cave, Battle Company, ...) are checks. Off by default. If you turn it on they can only hold filler items, because
-    anything useful placed there would leave other players waiting until you have finished your game.
-    """
-    display_name = "Include Postgame Checks"
-
-
 @dataclass
 class PokemonTHTOriginsOptions(PerGameCommonOptions):
     goal: Goal
     include_overworld_items: IncludeOverworldItems
     include_hidden_items: IncludeHiddenItems
     include_npc_gifts: IncludeNpcGifts
-    include_postgame_checks: IncludePostgameChecks
 
 
 # Class-level stubs so vanilla BW rules.py can access these without error
