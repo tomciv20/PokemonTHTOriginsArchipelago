@@ -58,7 +58,7 @@ connections: dict[str, RegionConnectionData] = {
     "Route 8 east": RegionConnectionData("Route 8", "Tubeline Bridge", has_any_legendary_stone),
     "Tubeline Bridge up": RegionConnectionData("Tubeline Bridge", "Route 9", None),
     "Route 9 east gate": RegionConnectionData("Route 9", "Opelucid City", None),
-    "Opelucid City east gate": RegionConnectionData("Opelucid City", "Route 11", None),
+    "Opelucid City east gate": RegionConnectionData("Opelucid City", "Route 11", can_beat_ghetsis),
     "Route 11 east gate": RegionConnectionData("Route 11", "Village Bridge", None),
     "Village Bridge east gate": RegionConnectionData("Village Bridge", "Route 12", None),
     "Route 12 east": RegionConnectionData("Route 12", "Lacunosa Town", None),
@@ -69,7 +69,7 @@ connections: dict[str, RegionConnectionData] = {
     "Black City/White Forest south gate": RegionConnectionData("Black City/White Forest", "Route 15", None),
     "Route 15 west gate": RegionConnectionData("Route 15", "Marvelous Bridge", None),
     # East to west Unova, counter clockwise
-    "Route 16 east gate": RegionConnectionData("Route 16", "Marvelous Bridge", None),
+    "Route 16 east gate": RegionConnectionData("Route 16", "Marvelous Bridge", can_beat_ghetsis),
     "Marvelous Bridge": RegionConnectionData("Marvelous Bridge", "Route 15", None),
     "Route 15 east gate": RegionConnectionData("Route 15", "Black City/White Forest", None),
     "Black City/White Forest north gate": RegionConnectionData("Black City/White Forest", "Route 14", None),
@@ -79,7 +79,7 @@ connections: dict[str, RegionConnectionData] = {
     "Lacunosa Town west": RegionConnectionData("Lacunosa Town", "Route 12", None),
     "Rotue 12 west gate": RegionConnectionData("Route 12", "Village Bridge", None),
     "Village Bridge west gate": RegionConnectionData("Village Bridge", "Route 11", None),
-    "Route 11 west gate": RegionConnectionData("Route 11", "Opelucid City", None),
+    "Route 11 west gate": RegionConnectionData("Route 11", "Opelucid City", can_beat_ghetsis),
     "Opelucid City west gate": RegionConnectionData("Opelucid City", "Route 9", None),
     "Route 9 west gate": RegionConnectionData("Route 9", "Tubeline Bridge", None),
     "Tubeline Bridge down": RegionConnectionData("Tubeline Bridge", "Route 8", has_any_legendary_stone),
@@ -125,3 +125,33 @@ connections: dict[str, RegionConnectionData] = {
     "Pokémon League champion room": RegionConnectionData("Pokémon League", "N's Castle", None),
 }
 
+
+# The connections into the postgame areas: the east side of Unova (Route 11 to Route 15, Undella Town, Black City/White
+# Forest, Giant Chasm, Abyssal Ruins, Abundant Shrine, ...) and Challenger's Cave. The unpatched game keeps them closed
+# until the story is finished (the officer east of Opelucid City, the workers on Marvelous Bridge, the black belt at
+# Challenger's Cave), so everything behind them is postgame. Beating Ghetsis stands in for that.
+postgame_gates = ("Opelucid City east gate", "Route 11 west gate", "Route 16 east gate", "Route 9 cave entrance")
+
+
+def _reachable_regions(skipped_connections: tuple[str, ...]) -> set[str]:
+    neighbours: dict[str, list[str]] = {}
+    for name, data in connections.items():
+        if name not in skipped_connections:
+            neighbours.setdefault(data.exiting_region, []).append(data.entering_region)
+    seen, stack = {"Menu"}, ["Menu"]
+    while stack:
+        for region in neighbours.get(stack.pop(), ()):
+            if region not in seen:
+                seen.add(region)
+                stack.append(region)
+    return seen
+
+
+postgame_regions: frozenset[str] = frozenset(_reachable_regions(()) - _reachable_regions(postgame_gates))
+
+# Postgame locations that sit in a region the player also uses before the postgame, so region alone can't tell them apart.
+postgame_location_prefixes = ("Battle Company - ",)
+
+
+def is_postgame_location(location_name: str, region_name: str) -> bool:
+    return region_name in postgame_regions or location_name.startswith(postgame_location_prefixes)

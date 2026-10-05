@@ -21,7 +21,7 @@ Pokemon THT Origins:
     ghetsis: 50
 
   # Which groups of locations are checks. Turn groups off for a shorter game (at least one must stay on).
-  # All on = 511 checks. Items on the ground = 277, hidden items = 131, NPC gifts = 103.
+  # With the defaults below you get 369 checks: items on the ground = 187, hidden items = 100, NPC gifts = 82.
   include_overworld_items:
     true: 50
     false: 0
@@ -33,6 +33,13 @@ Pokemon THT Origins:
   include_npc_gifts:
     true: 50
     false: 0
+
+  # Postgame areas (Routes 11 to 15, Undella Town, Giant Chasm, Abyssal Ruins, Abundant Shrine, Challenger's Cave,
+  # Battle Company, ...) can't be reached until you have finished the story. Off = those checks are left out.
+  # On = they exist (+142 checks) but only hold filler items.
+  include_postgame_checks:
+    true: 0
+    false: 50
 
   local_items:
     []

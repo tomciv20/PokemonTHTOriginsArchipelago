@@ -170,7 +170,7 @@ has_any_tm_hm: ExtendedRule = lambda state, world: (
 
 striaton_hidden_item: ExtendedRule = lambda state, world: state.can_reach_region("Route 3", world.player) or can_use_surf(state, world)
 dark_cave: ExtendedRule = lambda state, world: not world.options.modify_logic.is_require_flash or can_use_flash(state, world)
-challengers_cave: ExtendedRule = lambda state, world: dark_cave(state, world)
+challengers_cave: ExtendedRule = lambda state, world: can_beat_ghetsis(state, world) and dark_cave(state, world)
 mistralton_cave: ExtendedRule = lambda state, world: can_use_surf(state, world) and dark_cave(state, world)
 trial_chamber: ExtendedRule = lambda state, world: can_encounter_swords_of_justice(state, world) and can_use_strength(state, world)
 moor_of_icirrus: ExtendedRule = lambda state, world: can_use_surf(state, world) or (

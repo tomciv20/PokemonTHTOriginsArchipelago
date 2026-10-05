@@ -62,13 +62,16 @@ class PokemonTHTOriginsWorld(World):
         self.to_be_filled_locations = locations.count_to_be_filled_locations(self.regions)
         self.multiworld.regions.extend(self.regions.values())
 
-        # Register indirect conditions after regions are in the multiworld
-        try:
-            entrance = self.multiworld.get_entrance("Relic Castle B5F castleside", self.player)
-            if entrance is not None and "N's Castle" in self.regions:
-                self.multiworld.register_indirect_condition(self.regions["N's Castle"], entrance)
-        except Exception:
-            pass
+        # Entrances whose rule asks whether another region is reachable must be registered, or the generator can
+        # evaluate them before that region has become reachable and wrongly treat them as closed.
+        from .data.locations.region_connections import postgame_gates
+        for gate in ("Relic Castle B5F castleside", *postgame_gates):
+            try:
+                entrance = self.multiworld.get_entrance(gate, self.player)
+                if entrance is not None and "N's Castle" in self.regions:
+                    self.multiworld.register_indirect_condition(self.regions["N's Castle"], entrance)
+            except KeyError:
+                pass
 
     def create_item(self, name: str) -> Item:
         return items.generate_item(name, self)

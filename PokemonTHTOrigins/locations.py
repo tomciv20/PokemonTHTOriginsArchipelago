@@ -76,6 +76,8 @@ def create_and_place_locations(world: "PokemonTHTOriginsWorld") -> None:
     from .data.locations.ingame_items.other import table as other_table
     from .data.locations.ingame_items.special import gym_badges, gym_tms, tm_hm_ncps
     from .data.locations import is_checkable_unpatched
+    from .data.locations.region_connections import is_postgame_location
+    from BaseClasses import LocationProgressType
 
     options = world.options
     all_tables = [
@@ -98,12 +100,15 @@ def create_and_place_locations(world: "PokemonTHTOriginsWorld") -> None:
                 continue
             if data.region not in world.regions:
                 continue
+            is_postgame = is_postgame_location(name, data.region)
+            if is_postgame and not options.include_postgame_checks:
+                continue
             r: Region = world.regions[data.region]
             loc_id = world.location_name_to_id.get(name)
             if loc_id is None:
                 continue
             loc = PokemonTHTOriginsLocation(world.player, name, loc_id, r)
-            loc.progress_type = data.progress_type(world)
+            loc.progress_type = LocationProgressType.EXCLUDED if is_postgame else data.progress_type(world)
             if data.rule is not None:
                 loc.access_rule = world.rules_dict.get(data.rule)
             r.locations.append(loc)

@@ -107,6 +107,9 @@ class PokemonTHTOriginsClient(BizHawkClient):
             from .data.locations import all_item_locations
             self.missing_flag_loc_ids = [[] for _ in range(self.flags_amount)]
             self.late_setup_done = False
+            # Forget which flags were already seen, so every flag currently set in the save is reported again. Without
+            # this, connecting the same client to a different room (or a restarted one) would never send those checks.
+            self.flags_cache = bytearray(self.flag_bytes_amount)
             for loc_id in ctx.missing_locations:
                 loc_name = ctx.location_names.lookup_in_game(loc_id)
                 if loc_name in all_item_locations:

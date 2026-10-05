@@ -48,16 +48,17 @@ Pokemon THT Origins is a Pokemon Black romhack with a new story featuring origin
 
 ## What Gets Shuffled
 
-**511 locations**, all of which the unpatched game can actually report:
+**369 locations** by default, all of which the unpatched game can actually report:
 
 | Locations | Count |
 |---|---|
-| Overworld items (incl. Abyssal Ruins) | 277 |
-| Hidden items (Dowsing Machine) | 131 |
-| NPC gifts and events | 88 |
-| TMs/HMs given by NPCs | 15 |
+| Overworld items | 187 |
+| Hidden items (Dowsing Machine) | 100 |
+| NPC gifts, events and NPC TMs/HMs | 82 |
 
-To get fewer checks, turn location groups off in your yaml with `include_overworld_items`, `include_hidden_items` and `include_npc_gifts` (at least one must stay on). For example, turning off hidden items gives 380 checks, and turning off items on the ground gives 234. Everything the game needs to be beatable stays in the pool whichever you pick.
+To get fewer checks, turn location groups off in your yaml with `include_overworld_items`, `include_hidden_items` and `include_npc_gifts` (at least one must stay on). For example, turning off hidden items gives 269 checks, and turning off items on the ground gives 182. Everything the game needs to be beatable stays in the pool whichever you pick.
+
+**Postgame checks.** The east side of Unova (Routes 11 to 15, Lacunosa Town, Undella Town, Undella Bay, Village Bridge, Black City/White Forest, Giant Chasm, the Abyssal Ruins and Abundant Shrine) stays closed in the unpatched game until the story is finished: the officer east of Opelucid City and the workers on Marvelous Bridge block it. Challenger's Cave and the Battle Company building in Castelia City are postgame too. 142 checks live there and they are left out by default. If you turn on `include_postgame_checks` they exist, but can only hold filler items, so nobody ends up waiting for you to finish your game before they can progress.
 
 The item pool is the 8 gym badges, HMs and TMs, evolution stones and other held items, fossils, and the key items **Dragon Skull, Liberty Pass, Super Rod and the three Wingull Grams**, plus the vanilla Bicycle, Pal Pad, Vs. Recorder, Gracidea, Dowsing Machine and Prop Case. The remaining slots are filled with random filler items.
 
@@ -75,7 +76,7 @@ Other flags can be added to the ROM the same way to bring more locations back.
 Other differences from the official world:
 
 - No wild Pokemon, starter, or trainer randomization, and none planned — the official world implements these by rewriting ROM data tables at patch time, which isn't possible without introducing real ROM patching here
-- A handful of vanilla BW key items that only functioned as progression gates because of the official world's ROM patch (Explorer Kit, Loot Sack, Red Chain, Oak's Letter, Parcel, Blue Card, Basement Key, Machine Part, Tidal Bell, Lock Capsule) have been removed entirely, since they never gated anything here
+- A handful of vanilla BW key items that only worked as progression gates because of the official world's ROM patch (Explorer Kit, Loot Sack, Red Chain, Oak's Letter, Parcel, Blue Card, Basement Key, Machine Part, Tidal Bell, Lock Capsule) have been removed. Their roadblocks still exist in the game, but they are opened by story progress instead of an item. Most of them sit on the normal story path, so the logic treats them as open; the two that lead to the postgame east side are modeled as closed until the story is finished (see above)
 - Region logic still assumes the vanilla gates (badges, HMs) apply, but nothing stops a player from walking through areas the multiworld logic considers locked; only the checks and items are enforced
 - The gating of key items and TMs/HMs works by removing them from the bag a moment after the game hands them out, so it's best-effort: a player who is fast enough can use an item in that window
 
